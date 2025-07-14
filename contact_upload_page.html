@@ -7,23 +7,36 @@
         /* ----------------------------------------------- */
         /* NOUVEAU/MODIFIÉ : POUR GÉRER LE SCROLL ET L'APPARENCE */
         /* ----------------------------------------------- */
-        body {
-            font-family: sans-serif;
-            margin: 0; /* TRÈS IMPORTANT : Élimine les marges par défaut du corps */
-            padding: 20px; /* Ajoute un espace autour du contenu à l'intérieur de la page */
-            background-color: #f4f4f4; /* Couleur de fond de la page */
-            color: #333;
-            overflow: hidden; /* Empêche la barre de défilement interne du HTML */
-        }
-        .container {
-            max-width: 600px; /* Largeur maximale pour le contenu principal, comme vous l'aviez */
-            margin: auto; /* Centre le conteneur horizontalement */
-            padding: 20px; /* Espace intérieur du conteneur */
-            background: white; /* Fond blanc pour le conteneur principal */
-            border-radius: 8px; /* Bords légèrement arrondis */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Petite ombre pour donner de la profondeur */
-            min-height: 200px; /* Hauteur minimale si le contenu est très court */
-        }
+    body {
+        font-family: sans-serif;
+        margin: 0; /* TRÈS IMPORTANT : Élimine les marges par défaut du corps */
+        padding: 20px; /* Ajoute un espace autour du contenu à l'intérieur de la page */
+        background-color: #f4f4f4; /* Couleur de fond de la page */
+        color: #333;
+        overflow: hidden; /* Empêche le défilement du contenu */
+
+        /* NOUVEAU : Règles spécifiques pour cacher la barre de défilement */
+        -webkit-overflow-scrolling: touch; /* Améliore le défilement sur iOS */
+        -ms-overflow-style: none;  /* Pour Internet Explorer et Edge */
+        scrollbar-width: none;  /* Pour Firefox */
+    }
+
+    /* NOUVEAU : Règle WebKit pour cacher la barre de défilement visuellement */
+    body::-webkit-scrollbar {
+        display: none; /* Cache visuellement la barre de défilement */
+        width: 0px; /* Assure que la largeur de la barre est de zéro */
+        background: transparent; /* Rend le fond de la barre transparent */
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        min-height: 200px;
+    }
         /* ----------------------------------------------- */
         /* VOS STYLES EXISTANTS POUR LES BOUTONS, TEXTES, ETC. */
         /* ----------------------------------------------- */
