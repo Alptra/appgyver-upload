@@ -3,62 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vos Documents Traduits</title> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Mes Traductions Terminées</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ----------------------------------------------- */
-        /* NOUVEAU/MODIFIÉ : POUR GÉRER LE SCROLL ET L'APPARENCE */
-        /* ----------------------------------------------- */
-    body {
-        font-family: sans-serif;
-        margin: 0; /* TRÈS IMPORTANT : Élimine les marges par défaut du corps */
-        padding: 20px; /* Ajoute un espace autour du contenu à l'intérieur de la page */
-        background-color: #f4f4f4; /* Couleur de fond de la page */
-        color: #333;
-        overflow: hidden; /* Empêche le défilement du contenu */
-
-        /* NOUVEAU : Règles spécifiques pour cacher la barre de défilement */
-        -webkit-overflow-scrolling: touch; /* Améliore le défilement sur iOS */
-        -ms-overflow-style: none;  /* Pour Internet Explorer et Edge */
-        scrollbar-width: none;  /* Pour Firefox */
-    }
-
-    /* NOUVEAU : Règle WebKit pour cacher la barre de défilement visuellement */
-    body::-webkit-scrollbar {
-        display: none; /* Cache visuellement la barre de défilement */
-        width: 0px; /* Assure que la largeur de la barre est de zéro */
-        background: transparent; /* Rend le fond de la barre transparent */
-    }
-
-    .container {
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        min-height: 200px;
-    }
-        /* ----------------------------------------------- */
-        /* VOS STYLES EXISTANTS POUR LES BOUTONS, TEXTES, ETC. */
-        /* ----------------------------------------------- */
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #007bff; }
-        .translation-item {
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            padding: 15px;
-            margin-bottom: 10px; /* Espace entre chaque élément de traduction */
-            border-radius: 5px;
-        }
+        .translation-item { background-color: #e9ecef; border: 1px solid #dee2e6; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
         .translation-item h2 { margin-top: 0; color: #0056b3; }
-        .download-link {
-            display: inline-block;
-            background-color: #28a745;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-top: 10px;
-        }
+        .download-link { display: inline-block; background-color: #28a745; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; margin-top: 10px; }
         .download-link:hover { background-color: #218838; }
         .status { font-weight: bold; }
         .status.pending { color: #ffc107; }
@@ -68,7 +21,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Vos Documents Traduits</h1> <div id="translationsList">Chargement de vos commandes...</div> </div>
+        <h1>Mes Traductions Terminées</h1>
+        <div id="translationsList">Chargement des traductions...</div>
+    </div>
 
     <script>
         // --- CONFIGURATION SUPABASE ---
@@ -82,16 +37,16 @@
         async function fetchTranslations() {
             const { data, error } = await supabase
                 .from('Quote_requests') // Le nom de votre table
-                .select('name, email, description, service, file_url, url_final_file'); // Sélectionne les colonnes pertinentes
+                .select('name, email, description, service, file_url, url_final_file'); // Sélectionne les colonnes pertinentes, incluant 'email' et 'file_url'
 
             if (error) {
                 console.error('Erreur lors du chargement des traductions:', error.message);
-                translationsList.innerHTML = `<p class="no-data">Un problème est survenu lors du chargement de vos commandes: ${error.message}</p>`; // Texte d'erreur mis à jour
+                translationsList.innerHTML = `<p class="no-data">Erreur de chargement: ${error.message}</p>`;
                 return;
             }
 
             if (data.length === 0) {
-                translationsList.innerHTML = '<p class="no-data">Vous n\'avez pas encore de traductions terminées.</p>'; // Texte "pas de données" mis à jour
+                translationsList.innerHTML = '<p class="no-data">Aucune traduction trouvée pour le moment.</p>';
                 return;
             }
 
@@ -105,14 +60,17 @@
                 const email = item.email || 'Email non fourni';
                 const description = item.description || 'Pas de description';
                 const serviceType = item.service || 'Service non spécifié';
-                const fileUrl = item.file_url;
+                const fileUrl = item.file_url; // Ajout de la colonne file_url
                 const urlFinalFile = item.url_final_file;
 
                 itemDiv.innerHTML = `
-                    <h2>Commande : ${requestName}</h2> <p>Email : ${email}</p>
+                    <h2>Demande : ${requestName}</h2>
+                    <p>Email : ${email}</p>
                     <p>Description : ${description}</p>
                     <p>Service : ${serviceType}</p>
-                    ${fileUrl ? `<p><a href="${fileUrl}" target="_blank" class="download-link">Consulter le document source</a></p>` : '<p>Document source non disponible.</p>'} ${urlFinalFile ? `<p><a href="${urlFinalFile}" target="_blank" class="download-link">Télécharger la traduction finale</a></p>` : '<p>Traduction finale non disponible.</p>'} `;
+                    ${fileUrl ? `<p><a href="${fileUrl}" target="_blank" class="download-link">Voir le fichier initial</a></p>` : '<p>Fichier initial non disponible.</p>'}
+                    ${urlFinalFile ? `<p><a href="${urlFinalFile}" target="_blank" class="download-link">Télécharger le fichier final</a></p>` : '<p>Fichier final non disponible.</p>'}
+                    `;
                 translationsList.appendChild(itemDiv);
             });
         }
@@ -121,30 +79,6 @@
 
         // Optionnel: rafraîchir les données toutes les X secondes (pour une mise à jour en temps réel)
         // setInterval(fetchTranslations, 15000); // Rafraîchit toutes les 15 secondes
-    </script>
-
-    <script>
-        function sendHeightToAppGyver() {
-            const body = document.body;
-            const html = document.documentElement;
-            // Calcule la hauteur totale du contenu
-            const height = Math.max( body.scrollHeight, body.offsetHeight,
-                                     html.clientHeight, html.scrollHeight, html.offsetHeight );
-
-            // Si AppGyver est disponible (dans la WebView), il envoie la hauteur
-            if (window.AppGyver && window.AppGyver.postMessage) {
-                window.AppGyver.postMessage(JSON.stringify({ type: 'SET_HEIGHT', height: height }));
-            }
-        }
-
-        // Appelez la fonction au chargement initial de la page
-        window.addEventListener('load', sendHeightToAppGyver);
-        // Appelez la fonction si le DOM change (par ex. si des éléments sont ajoutés/supprimés)
-        const observer = new MutationObserver(sendHeightToAppGyver);
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-
-        // Optionnel: Rappelez la fonction en cas de redimensionnement de la fenêtre
-        window.addEventListener('resize', sendHeightToAppGyver);
     </script>
 </body>
 </html>
