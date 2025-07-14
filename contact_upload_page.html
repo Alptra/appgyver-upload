@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploader les traductions</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #007bff; }
+        input[type="file"] { display: block; margin: 20px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; } /* Style pour bouton désactivé */
+        .message { margin-top: 20px; padding: 10px; border-radius: 4px; text-align: center; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; } /* Nouveau style pour info */
+        .file-list { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .file-list div { padding: 5px 0; border-bottom: 1px dotted #eee; display: flex; justify-content: space-between; align-items: center; }
+        .file-list div:last-child { border-bottom: none; }
+        .file-list .status-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 5px; }
+        .file-list .status-icon.pending { background-color: #ffc107; } /* Jaune */
+        .file-list .status-icon.success { background-color: #28a745; } /* Vert */
+        .file-list .status-icon.error { background-color: #dc3545; } /* Rouge */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Uploader vos fichiers de traduction (optionnel)</h1>
+        <input type="file" id="fileInput" multiple>
+        <button id="uploadButton">Uploader les fichiers</button>
+        <div id="message" class="message"></div>
+        <div id="fileListContainer" class="file-list"></div>
+        
+        </div>
+
+    <script>
+        // --- CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://sjqmortolmwcwwykplta.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcW1vcnRvbG13Y3d3eWtwbHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDQ0NDMsImV4cCI6MjA2NzEyMDQ0M30.jBRlLEWpHCBSdeDf5Q7IMqrLD-l7OwDF6U5uPcAdVCs"; 
+        const SUPABASE_EDGE_FUNCTION_URL = "https://sjqmortolmwcwwykplta.supabase.co/functions/v1/smooth-handler"; // URL de votre fonction Edge
+        const BUCKET_NAME = "documents"; 
+        // --- FIN CONFIGURATION ---
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const messageDiv = document.getElementById('message');
+        const fileListContainer = document.getElementById('fileListContainer');
+
+        function displayMessage(msg, type = '') {
+            messageDiv.textContent = msg;
+            messageDiv.className = `message ${type}`;
+        }
+
+        function updateFileStatus(fileName, status) {
+            const fileItem = document.getElementById(`file-${fileName.replace(/\./g, '_')}`);
+            if (fileItem) {
+                const statusIcon = fileItem.querySelector('.status-icon');
+                if (statusIcon) {
+                    statusIcon.className = `status-icon ${status}`;
+                }
+            }
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            const files = fileInput.files;
+            
+            // L'upload est optionnel, donc pas de message d'erreur si aucun fichier n'est sélectionné
+            if (files.length === 0) {
+                displayMessage('Aucun fichier sélectionné. Soumission des autres données ou continuation sans upload.', 'info');
+                // Vous pouvez ajouter ici la logique pour soumettre d'autres données du formulaire
+                // si vous aviez des champs additionnels DANS cette page HTML.
+                // Sinon, l'utilisateur a juste cliqué sur "Uploader" sans fichier.
+                return; 
+            }
+
+            displayMessage('Préparation de l\'upload des fichiers...', '');
+            uploadButton.disabled = true;
+            fileListContainer.innerHTML = '';
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            Array.from(files).forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.id = `file-${file.name.replace(/\./g, '_')}`;
+                fileDiv.innerHTML = `<span>${file.name}</span> <span class="status-icon pending"></span>`;
+                fileListContainer.appendChild(fileDiv);
+            });
+
+            for (const file of files) {
+                try {
+                    const base64String = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+
+                    const uploadPayload = {
+                        fileBase64: base64String,
+                        fileName: file.name,
+                        mimeType: file.type,
+                        bucketName: BUCKET_NAME
+                    };
+
+                    const response = await fetch(SUPABASE_EDGE_FUNCTION_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify(uploadPayload)
+                    });
+
+                    const responseData = await response.json();
+
+                    if (response.ok) {
+                        displayMessage(`Fichier ${file.name} uploadé avec succès.`, 'success');
+                        updateFileStatus(file.name, 'success');
+                        successCount++;
+                    } else {
+                        displayMessage(`Erreur lors de l'upload de ${file.name}: ${responseData.error || 'Erreur inconnue'}`, 'error');
+                        updateFileStatus(file.name, 'error');
+                        errorCount++;
+                    }
+
+                } catch (error) {
+                    displayMessage(`Erreur locale pour ${file.name}: ${error.message}`, 'error');
+                    updateFileStatus(file.name, 'error');
+                    errorCount++;
+                }
+            }
+
+            uploadButton.disabled = false;
+            if (errorCount === 0) {
+                displayMessage(`Tous les fichiers ont été uploadés avec succès (${successCount} fichier(s)).`, 'success');
+            } else {
+                displayMessage(`Upload terminé : ${successCount} succès, ${errorCount} échec(s).`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
