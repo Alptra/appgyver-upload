@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploader les traductions</title>
+    <title>Uploader les fichiers de contact</title>
     <style>
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -11,9 +11,11 @@
         input[type="file"] { display: block; margin: 20px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
         button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
         button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; } /* Style pour bouton désactivé */
         .message { margin-top: 20px; padding: 10px; border-radius: 4px; text-align: center; }
         .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; } /* Nouveau style pour info */
         .file-list { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .file-list div { padding: 5px 0; border-bottom: 1px dotted #eee; display: flex; justify-content: space-between; align-items: center; }
         .file-list div:last-child { border-bottom: none; }
@@ -25,19 +27,20 @@
 </head>
 <body>
     <div class="container">
-        <h1>Uploader vos fichiers de traduction</h1>
+        <h1>Uploader vos fichiers (optionnel)</h1>
         <input type="file" id="fileInput" multiple>
-        <button id="uploadButton">Uploader</button>
+        <button id="uploadButton">Uploader les fichiers</button>
         <div id="message" class="message"></div>
         <div id="fileListContainer" class="file-list"></div>
-    </div>
+        
+        </div>
 
     <script>
         // --- CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://sjqmortolmwcwwykplta.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcW1vcnRvbG13Y3d3eWtwbHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDQ0NDMsImV4cCI6MjA2NzEyMDQ0M30.jBRlLEWpHCBSdeDf5Q7IMqrLD-l7OwDF6U5uPcAdVCs"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcW1vcnRvbG13Y3d3eWtwbHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDQ0NDMsImZXhwIjoyMDY3MTIwNDQzfQ.jBRlLEWpHCBSdeDf5Q7IMqrLD-l7OwDF6U5uPcAdVCs"; 
         const SUPABASE_EDGE_FUNCTION_URL = "https://sjqmortolmwcwwykplta.supabase.co/functions/v1/smooth-handler"; // URL de votre fonction Edge
-        const BUCKET_NAME = "final-work"; 
+        const BUCKET_NAME = "votre-nouveau-bucket-pour-les-uploads-clients"; // <<< REMPLACEZ CECI par le nom exact de votre nouveau bucket
         // --- FIN CONFIGURATION ---
 
         const fileInput = document.getElementById('fileInput');
@@ -62,12 +65,17 @@
 
         uploadButton.addEventListener('click', async () => {
             const files = fileInput.files;
+            
+            // L'upload est optionnel, donc pas de message d'erreur si aucun fichier n'est sélectionné
             if (files.length === 0) {
-                displayMessage('Veuillez sélectionner au moins un fichier.', 'error');
-                return;
+                displayMessage('Aucun fichier sélectionné. Vous pouvez continuer si l\'upload est optionnel.', 'info');
+                // Si vous avez d'autres champs de formulaire dans ce HTML et un bouton submit général,
+                // vous mettriez ici la logique pour soumettre les AUTRES données.
+                // Sinon, l'action est terminée pour l'upload de fichier.
+                return; 
             }
 
-            displayMessage('Préparation de l\'upload...', '');
+            displayMessage('Préparation de l\'upload des fichiers...', '');
             uploadButton.disabled = true;
             fileListContainer.innerHTML = '';
 
@@ -130,7 +138,7 @@
             if (errorCount === 0) {
                 displayMessage(`Tous les fichiers ont été uploadés avec succès (${successCount} fichier(s)).`, 'success');
             } else {
-                displayMessage(`Upload terminé : ${successCount} succès, ${errorCount} échec(s).`, errorCount > 0 ? 'error' : 'success');
+                displayMessage(`Upload terminé : ${successCount} succès, ${errorCount} échec(s).`, 'error');
             }
         });
     </script>
