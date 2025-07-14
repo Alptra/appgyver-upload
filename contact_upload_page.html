@@ -3,44 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploader les traductions</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-        .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    <title>Envoyez votre document pour un devis</title> <style>
+        /* ----------------------------------------------- */
+        /* NOUVEAU/MODIFIÉ : POUR GÉRER LE SCROLL ET L'APPARENCE */
+        /* ----------------------------------------------- */
+        body {
+            font-family: sans-serif;
+            margin: 0; /* TRÈS IMPORTANT : Élimine les marges par défaut du corps */
+            padding: 20px; /* Ajoute un espace autour du contenu à l'intérieur de la page */
+            background-color: #f4f4f4; /* Couleur de fond de la page */
+            color: #333;
+            overflow: hidden; /* Empêche la barre de défilement interne du HTML */
+        }
+        .container {
+            max-width: 600px; /* Largeur maximale pour le contenu principal, comme vous l'aviez */
+            margin: auto; /* Centre le conteneur horizontalement */
+            padding: 20px; /* Espace intérieur du conteneur */
+            background: white; /* Fond blanc pour le conteneur principal */
+            border-radius: 8px; /* Bords légèrement arrondis */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Petite ombre pour donner de la profondeur */
+            min-height: 200px; /* Hauteur minimale si le contenu est très court */
+        }
+        /* ----------------------------------------------- */
+        /* VOS STYLES EXISTANTS POUR LES BOUTONS, TEXTES, ETC. */
+        /* ----------------------------------------------- */
         h1 { text-align: center; color: #007bff; }
-        input[type="file"] { display: block; margin: 20px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        input[type="file"] {
+            display: block;
+            margin: 20px auto; /* Centre le input file */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 20px); /* Ajuste la largeur pour le padding */
+            max-width: 300px; /* Limite la largeur du champ de fichier si besoin */
+            box-sizing: border-box;
+            background-color: #ffffff; /* Fond blanc pour le champ de fichier */
+            cursor: pointer;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            max-width: 300px; /* Même largeur maximale que le input file */
+            display: block; /* Pour centrer le bouton */
+            margin: 0 auto; /* Centre le bouton */
+            transition: background-color 0.3s ease; /* Effet de transition au survol */
+        }
         button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; } /* Style pour bouton désactivé */
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
         .message { margin-top: 20px; padding: 10px; border-radius: 4px; text-align: center; }
         .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; } /* Nouveau style pour info */
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
         .file-list { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .file-list div { padding: 5px 0; border-bottom: 1px dotted #eee; display: flex; justify-content: space-between; align-items: center; }
         .file-list div:last-child { border-bottom: none; }
         .file-list .status-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 5px; }
-        .file-list .status-icon.pending { background-color: #ffc107; } /* Jaune */
-        .file-list .status-icon.success { background-color: #28a745; } /* Vert */
-        .file-list .status-icon.error { background-color: #dc3545; } /* Rouge */
+        .file-list .status-icon.pending { background-color: #ffc107; }
+        .file-list .status-icon.success { background-color: #28a745; }
+        .file-list .status-icon.error { background-color: #dc3545; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upload your file (optional)</h1>
-        <input type="file" id="fileInput" multiple>
-        <button id="uploadButton">Submit</button>
-        <div id="message" class="message"></div>
+        <h1>Envoyez votre document pour un devis</h1> <input type="file" id="fileInput" multiple>
+        <button id="uploadButton">Submit Document</button> <div id="message" class="message"></div>
         <div id="fileListContainer" class="file-list"></div>
-        
-        </div>
+    </div>
 
     <script>
         // --- CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://sjqmortolmwcwwykplta.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcW1vcnRvbG13Y3d3eWtwbHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDQ0NDMsImV4cCI6MjA2NzEyMDQ0M30.jBRlLEWpHCBSdeDf5Q7IMqrLD-l7OwDF6U5uPcAdVCs"; 
-        const SUPABASE_EDGE_FUNCTION_URL = "https://sjqmortolmwcwwykplta.supabase.co/functions/v1/smooth-handler"; // URL de votre fonction Edge
-        const BUCKET_NAME = "documents"; 
+        const SUPABASE_URL = "https://sjqmortolmwcwwykplta.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcW1vcnRvbG13Y3d3eWtwbHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NDQ0NDMsImV4cCI6MjA2NzEyMDQ0M30.jBRlLEWpHCBSdeDf5Q7IMqrLD-l7OwDF6U5uPcAdVCs";
+        const SUPABASE_EDGE_FUNCTION_URL = "https://sjqmortolmwcwwykplta.supabase.co/functions/v1/smooth-handler";
+        const BUCKET_NAME = "documents";
         // --- FIN CONFIGURATION ---
 
         const fileInput = document.getElementById('fileInput');
@@ -65,17 +106,13 @@
 
         uploadButton.addEventListener('click', async () => {
             const files = fileInput.files;
-            
-            // L'upload est optionnel, donc pas de message d'erreur si aucun fichier n'est sélectionné
+
             if (files.length === 0) {
-                displayMessage('Aucun fichier sélectionné. Soumission des autres données ou continuation sans upload.', 'info');
-                // Vous pouvez ajouter ici la logique pour soumettre d'autres données du formulaire
-                // si vous aviez des champs additionnels DANS cette page HTML.
-                // Sinon, l'utilisateur a juste cliqué sur "Uploader" sans fichier.
-                return; 
+                displayMessage('Veuillez sélectionner un fichier pour votre demande de devis.', 'info'); // Texte mis à jour
+                return;
             }
 
-            displayMessage('Préparation de l\'upload des fichiers...', '');
+            displayMessage('Préparation de l\'envoi de votre document...', ''); // Texte mis à jour
             uploadButton.disabled = true;
             fileListContainer.innerHTML = '';
 
@@ -118,11 +155,11 @@
                     const responseData = await response.json();
 
                     if (response.ok) {
-                        displayMessage(`Fichier ${file.name} uploadé avec succès.`, 'success');
+                        displayMessage(`${file.name} a été envoyé avec succès !`, 'success'); // Texte mis à jour
                         updateFileStatus(file.name, 'success');
                         successCount++;
                     } else {
-                        displayMessage(`Erreur lors de l'upload de ${file.name}: ${responseData.error || 'Erreur inconnue'}`, 'error');
+                        displayMessage(`Erreur lors de l'envoi de ${file.name}: ${responseData.error || 'Veuillez réessayer.'}`, 'error'); // Texte mis à jour
                         updateFileStatus(file.name, 'error');
                         errorCount++;
                     }
@@ -136,11 +173,35 @@
 
             uploadButton.disabled = false;
             if (errorCount === 0) {
-                displayMessage(`Tous les fichiers ont été uploadés avec succès (${successCount} fichier(s)).`, 'success');
+                displayMessage(`Votre document a été envoyé avec succès.`, 'success'); // Texte mis à jour
             } else {
-                displayMessage(`Upload terminé : ${successCount} succès, ${errorCount} échec(s).`, 'error');
+                displayMessage(`Envoi terminé : ${successCount} succès, ${errorCount} échec(s).`, 'error'); // Texte mis à jour
             }
         });
+    </script>
+
+    <script>
+        function sendHeightToAppGyver() {
+            const body = document.body;
+            const html = document.documentElement;
+            // Calcule la hauteur totale du contenu
+            const height = Math.max( body.scrollHeight, body.offsetHeight,
+                                     html.clientHeight, html.scrollHeight, html.offsetHeight );
+
+            // Si AppGyver est disponible (dans la WebView), il envoie la hauteur
+            if (window.AppGyver && window.AppGyver.postMessage) {
+                window.AppGyver.postMessage(JSON.stringify({ type: 'SET_HEIGHT', height: height }));
+            }
+        }
+
+        // Appelez la fonction au chargement initial de la page
+        window.addEventListener('load', sendHeightToAppGyver);
+        // Appelez la fonction si le DOM change (par ex. si des éléments sont ajoutés/supprimés)
+        const observer = new MutationObserver(sendHeightToAppGyver);
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+        // Optionnel: Rappelez la fonction en cas de redimensionnement de la fenêtre
+        window.addEventListener('resize', sendHeightToAppGyver);
     </script>
 </body>
 </html>
