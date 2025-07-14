@@ -22,7 +22,7 @@
 <body>
     <div class="container">
         <h1>My completed files</h1>
-        <div id="translationsList">My completed files</div>
+        <div id="translationsList">Chargement de vos traductions...</div>
     </div>
 
     <script>
@@ -34,10 +34,22 @@
 
         const translationsList = document.getElementById('translationsList');
 
+        // Récupère l'ID utilisateur depuis l'URL (passé par AppGyver)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId'); // 'userId' doit correspondre au nom du paramètre dans l'URL d'AppGyver
+
         async function fetchTranslations() {
+            // Si l'ID utilisateur n'est pas présent dans l'URL, on ne peut pas filtrer
+            if (!userId) {
+                console.error("Erreur: L'ID utilisateur n'a pas été passé à la Web View. Assurez-vous que l'utilisateur est connecté dans AppGyver.");
+                translationsList.innerHTML = '<p class="no-data">Erreur: ID utilisateur manquant. Veuillez vous connecter à l\'application.</p>';
+                return;
+            }
+
             const { data, error } = await supabase
                 .from('Quote_requests') // Le nom de votre table
-                .select('name, email, description, service, file_url, url_final_file'); // Sélectionne les colonnes pertinentes, incluant 'email' et 'file_url'
+                .select('name, email, description, service, file_url, url_final_file') // Sélectionne les colonnes pertinentes
+                .eq('user_id', userId); // <-- FILTRE LES DONNÉES PAR L'ID DE L'UTILISATEUR
 
             if (error) {
                 console.error('Erreur lors du chargement des traductions:', error.message);
@@ -46,11 +58,11 @@
             }
 
             if (data.length === 0) {
-                translationsList.innerHTML = '<p class="no-data">Aucune traduction trouvée pour le moment.</p>';
+                translationsList.innerHTML = '<p class="no-data">Aucune traduction trouvée pour le moment pour cet utilisateur.</p>';
                 return;
             }
 
-            translationsList.innerHTML = ''; // Nettoie le message de chargement
+            translationsList.innerHTML = ''; // Nettoie le message de chargement initial
 
             data.forEach(item => {
                 const itemDiv = document.createElement('div');
@@ -60,8 +72,8 @@
                 const email = item.email || 'Email non fourni';
                 const description = item.description || 'Pas de description';
                 const serviceType = item.service || 'Service non spécifié';
-                const fileUrl = item.file_url; // Ajout de la colonne file_url
-                const urlFinalFile = item.url_final_file;
+                const fileUrl = item.fileUrl; // Correct: Supabase renvoie en camelCase
+                const urlFinalFile = item.urlFinalFile; // Correct: Supabase renvoie en camelCase
 
                 itemDiv.innerHTML = `
                     <h2>Demande : ${requestName}</h2>
